@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 
+
 export default function Index() {
   interface Planet {
     id: number;
@@ -25,13 +26,21 @@ export default function Index() {
   const [planets, setPlanets] = useState<Planet[]>([]);
   const [currentPlanet, setCurrentPlanet] = useState<Planet | null>(null); // Planeta seleccionado
   const [isAdding, setIsAdding] = useState(false); // Modo agregar/editar
-  const [form, setForm] = useState({
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [form, setForm] = useState<{
+    name: string;
+    description: string;
+    moons: number;
+    moon_names: string[];
+    image: string;
+  }>({
     name: "",
     description: "",
     moons: 0,
     moon_names: [],
     image: "",
   });
+  
   const [originalPlanets, setOriginalPlanets] = useState<Planet[]>([]);
 
   // Obtener planetas desde el backend al cargar el componente
@@ -88,8 +97,13 @@ export default function Index() {
       .then((response) => response.json())
       .then((savedPlanet) => {
         if (currentPlanet) {
-          // Actualizar planeta existente
+          // Editar planeta existente
           setPlanets((prev) =>
+            prev.map((planet) =>
+              planet.id === currentPlanet.id ? savedPlanet : planet
+            )
+          );
+          setOriginalPlanets((prev) =>
             prev.map((planet) =>
               planet.id === currentPlanet.id ? savedPlanet : planet
             )
@@ -97,11 +111,13 @@ export default function Index() {
         } else {
           // Agregar nuevo planeta
           setPlanets((prev) => [...prev, savedPlanet]);
+          setOriginalPlanets((prev) => [...prev, savedPlanet]);
         }
         setForm({ name: "", description: "", moons: 0, moon_names: [], image: "" });
         setCurrentPlanet(null);
         setIsAdding(false);
       })
+      
       .catch((error) => console.error("Error al guardar el planeta:", error));
   };
 
@@ -115,6 +131,9 @@ export default function Index() {
     })
       .then(() => {
         setPlanets((prev) => prev.filter((planet) => planet.id !== id));
+        setOriginalPlanets((prev) =>
+          prev.filter((planet) => planet.id !== id)
+        ); 
         setCurrentPlanet(null);
       })
       .catch((error) => console.error("Error al eliminar el planeta:", error));
@@ -126,21 +145,42 @@ export default function Index() {
     setIsAdding(false);
   };
 
+  
+
   return (
     <View style={styles.container}>
-      {/* Pantalla de listado de planetas */}
       {!currentPlanet && !isAdding && (
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Planetario UCU</Text>
 
-          {/* Botones: Ordenar/Restablecer y Agregar */}
           <View style={styles.buttonsRow}>
-            <TouchableOpacity
-              style={[styles.button, styles.addButton]}
-              onPress={() => setIsAdding(true)}
-            >
-              <Text style={styles.buttonText}>Agregar Planeta</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+  style={[
+    styles.button,
+    Platform.OS === "android" ? styles.androidAddButton : styles.iosAddButton,
+  ]}
+  onPress={() => {
+    setForm({
+      name: "",
+      description: "",
+      moons: 0,
+      moon_names: [],
+      image: "",
+    });
+    setIsAdding(true);
+  }}
+>
+  <Text
+    style={
+      Platform.OS === "android"
+        ? styles.androidAddButtonText
+        : styles.iosAddButtonText
+    }
+  >
+    {Platform.OS === "android" ? "Nuevo Planeta" : "Crear Planeta"}
+  </Text>
+</TouchableOpacity>
+
 
             <TouchableOpacity
               style={[styles.button, styles.sortButton]}
@@ -180,91 +220,148 @@ export default function Index() {
       )}
 
       {/* Pantalla de detalles del planeta */}
-      {currentPlanet && !isAdding && (
-        <ScrollView>
-          <View style={{ flex: 1, alignItems: "center", padding: 20 }}>
-            <Text style={[styles.title, { fontSize: 28 }]}>Detalles del Planeta</Text>
-            <Image source={{ uri: currentPlanet.image }} style={styles.planetDetailsImage} />
-            <Text style={styles.detailText}>
-              <Text style={styles.boldText}>Nombre:</Text> {currentPlanet.name}
-            </Text>
-            <Text style={styles.detailText}>
-              <Text style={styles.boldText}>Descripción:</Text> {currentPlanet.description}
-            </Text>
-            <Text style={styles.detailText}>
-              <Text style={styles.boldText}>Número de lunas:</Text> {currentPlanet.moons}
-            </Text>
-            <Text style={styles.detailText}>
-              <Text style={styles.boldText}>Lunas:</Text> {renderMoons(currentPlanet.moon_names)}
-            </Text>
+{currentPlanet && !isAdding && (
+  <ScrollView>
+    <View style={styles.detailsContainer}>
+      {/* Botón de volver */}
+      <TouchableOpacity
+        style={[styles.backButton, styles.addButton]}
+        onPress={goBack}
+      >
+        <Text style={styles.buttonText}>Atrás</Text>
+      </TouchableOpacity>
 
-            {/* Botón para eliminar */}
-            <TouchableOpacity onPress={() => deletePlanet(currentPlanet.id)} style={styles.deleteButton}>
-              <Text style={styles.buttonText}>Eliminar</Text>
-            </TouchableOpacity>
+      <Text style={[styles.title, { fontSize: 28 }]}>Detalles del Planeta</Text>
 
-            {/* Botón para volver */}
-            <TouchableOpacity onPress={goBack} style={[styles.button, styles.addButton]}>
-              <Text style={styles.buttonText}>Volver</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      )}
+      <Image
+        source={{ uri: currentPlanet.image }}
+        style={styles.planetDetailsImage}
+      />
+
+      <Text style={styles.detailText}>
+        <Text style={styles.boldText}>Nombre:</Text> {currentPlanet.name}
+      </Text>
+      <Text style={styles.detailText}>
+        <Text style={styles.boldText}>Descripción:</Text> {currentPlanet.description}
+      </Text>
+      <Text style={styles.detailText}>
+        <Text style={styles.boldText}>Número de lunas:</Text> {currentPlanet.moons}
+      </Text>
+      <Text style={styles.detailText}>
+        <Text style={styles.boldText}>Lunas:</Text> {renderMoons(currentPlanet.moon_names)}
+      </Text>
+
+      {/* Botón de editar */}
+      <TouchableOpacity
+        onPress={() => {
+          setForm({
+            name: currentPlanet.name || "",
+            description: currentPlanet.description || "",
+            moons: currentPlanet.moons || 0,
+            moon_names: currentPlanet.moon_names || [],
+            image: currentPlanet.image || "",
+          });
+          setIsAdding(true);
+        }}
+        style={[styles.submitButton, styles.editButton]}
+      >
+        <Text style={styles.buttonText}>Editar</Text>
+      </TouchableOpacity>
+
+      {/* Botón de eliminar */}
+      <TouchableOpacity
+        onPress={() => deletePlanet(currentPlanet.id)}
+        style={[styles.submitButton, styles.deleteButton]}
+      >
+        <Text style={styles.buttonText}>Eliminar</Text>
+      </TouchableOpacity>
+    </View>
+  </ScrollView>
+)}
+
+
 
 
 
       {/* Pantalla para agregar/editar planeta */}
       {isAdding && (
-        <ScrollView>
-          <View>
-            <Text style={styles.title}>
-              {currentPlanet ? "Editar Planeta" : "Agregar Planeta"}
-            </Text>
-            <TextInput
-              placeholder="Nombre"
-              value={form.name}
-              onChangeText={(text) => handleFormChange("name", text)}
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="Descripción"
-              value={form.description}
-              onChangeText={(text) => handleFormChange("description", text)}
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="Número de lunas"
-              value={form.moons.toString()}
-              onChangeText={(text) => handleFormChange("moons", parseInt(text) || 0)}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="Nombres de las lunas (separadas por comas)"
-              value={form.moon_names.join(", ")}
-              onChangeText={(text) =>
-                handleFormChange(
-                  "moon_names",
-                  text.split(",").map((name) => name.trim())
-                )
-              }
-              style={styles.input}
-            />
-            <TextInput
-              placeholder="URL de la imagen"
-              value={form.image}
-              onChangeText={(text) => handleFormChange("image", text)}
-              style={styles.input}
-            />
-            <TouchableOpacity onPress={savePlanet}>
-              <Text style={styles.saveButton}>Guardar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={goBack}>
-              <Text style={styles.cancelButton}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      )}
+  <ScrollView>
+    <View style={styles.addPlanetContainer}>
+      <TouchableOpacity
+        style={[styles.backButton, styles.addButton]}
+        onPress={goBack}
+      >
+        <Text style={styles.buttonText}>Atrás</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.title}>
+        {currentPlanet ? "Editar Planeta" : "Agregar Planeta"}
+      </Text>
+
+      {/* Formulario */}
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Nombre:</Text>
+        <TextInput
+          placeholder="Nombre"
+          value={form.name}
+          onChangeText={(text) => handleFormChange("name", text)}
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Descripción:</Text>
+        <TextInput
+          placeholder="Descripción"
+          value={form.description}
+          onChangeText={(text) => handleFormChange("description", text)}
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Número de lunas:</Text>
+        <TextInput
+          placeholder="Número de lunas"
+          value={form.moons.toString()}
+          onChangeText={(text) => handleFormChange("moons", parseInt(text) || 0)}
+          keyboardType="numeric"
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>Lunas (separadas por comas):</Text>
+        <TextInput
+          placeholder="Nombres de las lunas"
+          value={form.moon_names.join(", ")}
+          onChangeText={(text) =>
+            handleFormChange(
+              "moon_names",
+              text.split(",").map((name) => name.trim())
+            )
+          }
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.label}>URL de la imagen:</Text>
+        <TextInput
+          placeholder="URL de la imagen"
+          value={form.image}
+          onChangeText={(text) => handleFormChange("image", text)}
+          style={styles.input}
+        />
+      </View>
+
+      {/* Botones */}
+      <TouchableOpacity onPress={savePlanet} style={styles.submitButton}>
+        <Text style={styles.buttonText}>Guardar Planeta</Text>
+      </TouchableOpacity>
+    </View>
+  </ScrollView>
+)}
     </View>
   );
 }
@@ -275,6 +372,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#e2f7fc",
+    
   },
   title: {
     fontSize: 24,
@@ -301,12 +399,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     textAlign: "center",
   },
-  planetItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#3d88e9",
+  androidAddButton: {
+    backgroundColor: "blue",
+    alignSelf: "flex-start", // Alineación a la izquierda
+  },
+  iosAddButton: {
+    backgroundColor: "green",
+    alignSelf: "flex-end", // Alineación a la derecha
+  },
+  androidAddButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  iosAddButtonText: {
+    color: "black",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   planetTitle: {
     fontSize: 18,
@@ -364,13 +473,27 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
   },
+  editButton: {
+    backgroundColor: "green", // Un color de fondo para el botón de editar (naranja en este caso)
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  
+  submitButton: {
+    backgroundColor: "green",
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
+    alignItems: "center",
+  },
   cancelButton: {
     backgroundColor: "red",
-    color: "white",
-    textAlign: "center",
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 10,
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: "center",
   },
   deleteButton: {
     backgroundColor: "red",
@@ -386,7 +509,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 10,
     borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   planetDetailsImage: {
     width: 200, // Imagen más grande
@@ -402,4 +525,148 @@ const styles = StyleSheet.create({
   boldText: {
     fontWeight: "bold", // Texto en negrita
   },
+  addPlanetContainer: {
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    marginVertical: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  detailsContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#e2f7fc", // Fondo general de la pantalla
+  },
+  detailCard: {
+    backgroundColor: "#fff", // Fondo blanco para el detalle
+    padding: 20,
+    borderRadius: 8,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  formGroup: {
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    fontWeight: "bold",
+  },
 });
+{/*import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  ScrollView,
+  Platform,
+} from "react-native";
+
+export default function Index() {
+  // Estado para el tema (claro por defecto)
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
+
+  // Función para alternar el tema
+  const toggleTheme = () => setIsDarkTheme((prev) => !prev);
+
+  const themeStyles = isDarkTheme ? darkTheme : lightTheme;
+
+  return (
+    <View style={[styles.container, themeStyles.container]}>
+      
+      <TouchableOpacity
+        style={[styles.themeToggleButton, themeStyles.button]}
+        onPress={toggleTheme}
+      >
+        <Text style={themeStyles.buttonText}>
+          Cambiar a {isDarkTheme ? "Claro" : "Oscuro"}
+        </Text>
+      </TouchableOpacity>
+
+      <Text style={[styles.title, themeStyles.text]}>Planetario UCU</Text>
+      
+      
+      <FlatList
+        data={[]}
+        renderItem={() => null}
+        contentContainerStyle={[styles.listContainer, themeStyles.card]}
+      />
+    </View>
+  );
+}
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  listContainer: {
+    width: "85%",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 20,
+  },
+  themeToggleButton: {
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    alignSelf: "center",
+  },
+});
+
+
+const lightTheme = StyleSheet.create({
+  container: {
+    backgroundColor: "#e2f7fc",
+  },
+  text: {
+    color: "#000",
+  },
+  card: {
+    backgroundColor: "#f0f0f0",
+  },
+  button: {
+    backgroundColor: "#2196F3",
+  },
+  buttonText: {
+    color: "#fff",
+  },
+});
+
+
+const darkTheme = StyleSheet.create({
+  container: {
+    backgroundColor: "#1e1e1e",
+  },
+  text: {
+    color: "#fff",
+  },
+  card: {
+    backgroundColor: "#333",
+  },
+  button: {
+    backgroundColor: "#BB86FC",
+  },
+  buttonText: {
+    color: "#000",
+  },
+});
+ */}
