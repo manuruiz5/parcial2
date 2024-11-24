@@ -135,46 +135,46 @@ export default function Index() {
 
           {/* Botones: Ordenar/Restablecer y Agregar */}
           <View style={styles.buttonsRow}>
-          <TouchableOpacity
-          style={[styles.button, styles.addButton]}
-          onPress={() => setIsAdding(true)}
-        >
-          <Text style={styles.buttonText}>Agregar Planeta</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.addButton]}
+              onPress={() => setIsAdding(true)}
+            >
+              <Text style={styles.buttonText}>Agregar Planeta</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.sortButton]}
-          onPress={
-            planets.length > 0 && planets[0].id !== originalPlanets[0].id
-              ? resetOrder
-              : sortByMoons
-          }
-        >
-          <Text style={styles.buttonText}>
-            {planets.length > 0 && planets[0].id !== originalPlanets[0].id
-              ? "Restablecer Orden"
-              : "Ordenar por Lunas"}
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity
+              style={[styles.button, styles.sortButton]}
+              onPress={
+                planets.length > 0 && planets[0].id !== originalPlanets[0].id
+                  ? resetOrder
+                  : sortByMoons
+              }
+            >
+              <Text style={styles.buttonText}>
+                {planets.length > 0 && planets[0].id !== originalPlanets[0].id
+                  ? "Restablecer Orden"
+                  : "Ordenar por Lunas"}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
 
           {/* Lista de planetas */}
           <FlatList
-  data={planets}
-  keyExtractor={(item) => item.id.toString()}
-  renderItem={({ item }: { item: Planet }) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => setCurrentPlanet(item)} // Navega a los detalles
-    >
-      <Image source={{ uri: item.image }} style={styles.planetImage} />
-      <Text style={styles.planetTitle}>{item.name}</Text>
-      
-    </TouchableOpacity>
-  )}
-  contentContainerStyle={styles.listContainer}
-/>
+            data={planets}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }: { item: Planet }) => (
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => setCurrentPlanet(item)} // Navega a los detalles
+              >
+                <Image source={{ uri: item.image }} style={styles.planetImage} />
+                <Text style={styles.planetTitle}>{item.name}</Text>
+
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.listContainer}
+          />
 
         </View>
       )}
@@ -182,22 +182,36 @@ export default function Index() {
       {/* Pantalla de detalles del planeta */}
       {currentPlanet && !isAdding && (
         <ScrollView>
-          <View>
-            <Text style={styles.title}>Detalles del Planeta</Text>
-            <Image source={{ uri: currentPlanet.image }} style={styles.planetImage} />
-            <Text>Nombre: {currentPlanet.name}</Text>
-            <Text>Descripción: {currentPlanet.description}</Text>
-            <Text>Número de lunas: {currentPlanet.moons}</Text>
-            <Text>Lunas: {renderMoons(currentPlanet.moon_names)}</Text>
-            <TouchableOpacity onPress={() => deletePlanet(currentPlanet.id)}>
-              <Text style={styles.deleteButton}>Eliminar</Text>
+          <View style={{ flex: 1, alignItems: "center", padding: 20 }}>
+            <Text style={[styles.title, { fontSize: 28 }]}>Detalles del Planeta</Text>
+            <Image source={{ uri: currentPlanet.image }} style={styles.planetDetailsImage} />
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Nombre:</Text> {currentPlanet.name}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Descripción:</Text> {currentPlanet.description}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Número de lunas:</Text> {currentPlanet.moons}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Lunas:</Text> {renderMoons(currentPlanet.moon_names)}
+            </Text>
+
+            {/* Botón para eliminar */}
+            <TouchableOpacity onPress={() => deletePlanet(currentPlanet.id)} style={styles.deleteButton}>
+              <Text style={styles.buttonText}>Eliminar</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={goBack}>
-              <Text style={styles.backButton}>Volver</Text>
+
+            {/* Botón para volver */}
+            <TouchableOpacity onPress={goBack} style={[styles.button, styles.addButton]}>
+              <Text style={styles.buttonText}>Volver</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       )}
+
+
 
       {/* Pantalla para agregar/editar planeta */}
       {isAdding && (
@@ -266,7 +280,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-    textAlign: "center", 
+    textAlign: "center",
   },
   listContainer: {
     flexDirection: "row",
@@ -373,5 +387,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
+  },
+  planetDetailsImage: {
+    width: 200, // Imagen más grande
+    height: 200,
+    borderRadius: 100, // Redonda
+    marginBottom: 20,
+  },
+  detailText: {
+    fontSize: 18, // Texto más grande
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  boldText: {
+    fontWeight: "bold", // Texto en negrita
   },
 });
