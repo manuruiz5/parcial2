@@ -1,49 +1,37 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Platform,
-  ScrollView,
-} from "react-native";
-
+import {View,Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Image, Platform,ScrollView } from "react-native";
 
 export default function Index() {
-  interface Planet {
+  interface Equipo {
     id: number;
     name: string;
     description: string;
-    moons: number;
-    moon_names: string[] | undefined;
+    goals: number;
+    points: number;
     image: string;
   }
 
   const baseUrl = "http://161.35.143.238:8000/mruiz";
-  const [planets, setPlanets] = useState<Planet[]>([]);
-  const [currentPlanet, setCurrentPlanet] = useState<Planet | null>(null); // Planeta seleccionado
+  const [equipos, setEquipos] = useState<Equipo[]>([]);
+  const [currentEquipo, setCurrentEquipo] = useState<Equipo | null>(null); // Equipo seleccionado
   const [isAdding, setIsAdding] = useState(false); // Modo agregar/editar
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [form, setForm] = useState<{
     name: string;
     description: string;
-    moons: number;
-    moon_names: string[];
+    goals: number;
+    points: number;
     image: string;
   }>({
     name: "",
     description: "",
-    moons: 0,
-    moon_names: [],
+    goals: 0,
+    points: 0,
     image: "",
   });
-  
-  const [originalPlanets, setOriginalPlanets] = useState<Planet[]>([]);
 
-  // Obtener planetas desde el backend al cargar el componente
+  const [originalEquipos, setOriginalEquipos] = useState<Equipo[]>([]);
+
+  // Obtener Equipo desde el backend al cargar el componente
   useEffect(() => {
     fetch(baseUrl, {
       headers: {
@@ -52,36 +40,36 @@ export default function Index() {
     })
       .then((response) => response.json())
       .then((data) => {
-        setPlanets(data);
-        setOriginalPlanets(data);
+        setEquipos(data);
+        setOriginalEquipos(data);
       })
       .catch((error) => console.error("Error al obtener los planetas:", error));
   }, []);
 
-  // Función para ordenar por cantidad de lunas (mayor a menor)
-  const sortByMoons = () => {
-    const sortedPlanets = [...planets].sort((a, b) => b.moons - a.moons);
-    setPlanets(sortedPlanets);
+  // Función para ordenar por cantidad de puntos (mayor a menor)
+  const sortByPoints = () => {
+    const sortedEquipos = [...equipos].sort((a, b) => b.points - a.points);
+    setEquipos(sortedEquipos);
   };
 
   // Función para restablecer el orden original
   const resetOrder = () => {
-    setPlanets(originalPlanets);
+    setEquipos(originalEquipos);
   };
 
   // Función para manejar el formulario
   const handleFormChange = (field: keyof typeof form, value: any) => {
     setForm({ ...form, [field]: value });
   };
-
-  const renderMoons = (moons: string[] | undefined) => {
-    return moons && moons.length > 0 ? moons.join(", ") : "Ninguna";
+/*
+  const renderPoints = (moons: number) => {
+    return moons && moons.length > 0 ? moons.join(", ") : "Ninguno";
   };
-
+*/
   // Agregar o editar planeta
-  const savePlanet = () => {
-    const method = currentPlanet ? "PUT" : "POST";
-    const url = currentPlanet ? `${baseUrl}/${currentPlanet.id}` : baseUrl;
+  const saveEquipo = () => {
+    const method = currentEquipo ? "PUT" : "POST";
+    const url = currentEquipo ? `${baseUrl}/${currentEquipo.id}` : baseUrl;
 
     fetch(url, {
       method,
@@ -89,40 +77,40 @@ export default function Index() {
       body: JSON.stringify({
         name: form.name,
         description: form.description,
-        moons: form.moons,
-        moon_names: form.moon_names,
+        goals: form.goals,
+        points: form.points,
         image: form.image,
       }),
     })
       .then((response) => response.json())
-      .then((savedPlanet) => {
-        if (currentPlanet) {
-          // Editar planeta existente
-          setPlanets((prev) =>
-            prev.map((planet) =>
-              planet.id === currentPlanet.id ? savedPlanet : planet
+      .then((savedEquipo) => {
+        if (currentEquipo) {
+          // Editar equipo existente
+          setEquipos((prev) =>
+            prev.map((equipo) =>
+              equipo.id === currentEquipo.id ? savedEquipo : equipo
             )
           );
-          setOriginalPlanets((prev) =>
-            prev.map((planet) =>
-              planet.id === currentPlanet.id ? savedPlanet : planet
+          setOriginalEquipos((prev) =>
+            prev.map((equipo) =>
+              equipo.id === currentEquipo.id ? savedEquipo : equipo
             )
           );
         } else {
-          // Agregar nuevo planeta
-          setPlanets((prev) => [...prev, savedPlanet]);
-          setOriginalPlanets((prev) => [...prev, savedPlanet]);
+          // Agregar nuevo equipo
+          setEquipos((prev) => [...prev, savedEquipo]);
+          setOriginalEquipos((prev) => [...prev, savedEquipo]);
         }
-        setForm({ name: "", description: "", moons: 0, moon_names: [], image: "" });
-        setCurrentPlanet(null);
+        setForm({ name: "", description: "", goals: 0, points: 0, image: "" });
+        setCurrentEquipo(null);
         setIsAdding(false);
       })
-      
-      .catch((error) => console.error("Error al guardar el planeta:", error));
+
+      .catch((error) => console.error("Error al guardar el equipo:", error));
   };
 
-  // Eliminar planeta
-  const deletePlanet = (id: number) => {
+  // Eliminar equipo
+  const deleteEquipo = (id: number) => {
     fetch(`${baseUrl}/${id}`, {
       method: "DELETE",
       headers: {
@@ -130,244 +118,226 @@ export default function Index() {
       },
     })
       .then(() => {
-        setPlanets((prev) => prev.filter((planet) => planet.id !== id));
-        setOriginalPlanets((prev) =>
-          prev.filter((planet) => planet.id !== id)
-        ); 
-        setCurrentPlanet(null);
+        setEquipos((prev) => prev.filter((equipo) => equipo.id !== id));
+        setOriginalEquipos((prev) =>
+          prev.filter((equipo) => equipo.id !== id)
+        );
+        setCurrentEquipo(null);
       })
-      .catch((error) => console.error("Error al eliminar el planeta:", error));
+      .catch((error) => console.error("Error al eliminar el equipo:", error));
   };
 
   // Volver a la lista
   const goBack = () => {
-    setCurrentPlanet(null);
+    setCurrentEquipo(null);
     setIsAdding(false);
   };
 
-  
-
   return (
     <View style={styles.container}>
-      {!currentPlanet && !isAdding && (
+      {!currentEquipo && !isAdding && (
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Planetario UCU</Text>
+          <Text style={styles.title}>Eliminatorias del mundial</Text>
 
           <View style={styles.buttonsRow}>
-          <TouchableOpacity
-  style={[
-    styles.button,
-    Platform.OS === "android" ? styles.androidAddButton : styles.iosAddButton,
-  ]}
-  onPress={() => {
-    setForm({
-      name: "",
-      description: "",
-      moons: 0,
-      moon_names: [],
-      image: "",
-    });
-    setIsAdding(true);
-  }}
->
-  <Text
-    style={
-      Platform.OS === "android"
-        ? styles.androidAddButtonText
-        : styles.iosAddButtonText
-    }
-  >
-    {Platform.OS === "android" ? "Nuevo Planeta" : "Crear Planeta"}
-  </Text>
-</TouchableOpacity>
-
+            <TouchableOpacity
+              style={[
+                styles.button,
+                Platform.OS === "android"
+                  ? styles.androidAddButton
+                  : styles.iosAddButton,
+              ]}
+              onPress={() => {
+                setForm({
+                  name: "",
+                  description: "",
+                  goals: 0,
+                  points: 0,
+                  image: "",
+                });
+                setIsAdding(true);
+              }}
+            >
+              
+              <Text
+                style={
+                  Platform.OS === "android"
+                    ? styles.androidAddButtonText
+                    : styles.iosAddButtonText
+                }
+              >
+                {Platform.OS === "android" ? "Nuevo Equipo" : "Crear Equipo"}
+              </Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.button, styles.sortButton]}
               onPress={
-                planets.length > 0 && planets[0].id !== originalPlanets[0].id
+                equipos.length > 0 && equipos[0].id !== originalEquipos[0].id
                   ? resetOrder
-                  : sortByMoons
+                  : sortByPoints
               }
             >
               <Text style={styles.buttonText}>
-                {planets.length > 0 && planets[0].id !== originalPlanets[0].id
+                {equipos.length > 0 && equipos[0].id !== originalEquipos[0].id
                   ? "Restablecer Orden"
-                  : "Ordenar por Lunas"}
+                  : "Ordenar por Puntos"}
               </Text>
             </TouchableOpacity>
           </View>
 
-
-          {/* Lista de planetas */}
+          {/* Lista de equipos */}
           <FlatList
-            data={planets}
+            data={equipos}
             keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }: { item: Planet }) => (
+            renderItem={({ item }: { item: Equipo }) => (
               <TouchableOpacity
                 style={styles.card}
-                onPress={() => setCurrentPlanet(item)} // Navega a los detalles
+                onPress={() => setCurrentEquipo(item)} // Navega a los detalles
               >
-                <Image source={{ uri: item.image }} style={styles.planetImage} />
-                <Text style={styles.planetTitle}>{item.name}</Text>
-
+                <Image source={{ uri: item.image }} style={styles.equipoImage} />
+                <Text style={styles.equipoTitle}>{item.name}</Text>
               </TouchableOpacity>
             )}
             contentContainerStyle={styles.listContainer}
           />
-
         </View>
       )}
 
       {/* Pantalla de detalles del planeta */}
-{currentPlanet && !isAdding && (
-  <ScrollView>
-    <View style={styles.detailsContainer}>
-      {/* Botón de volver */}
-      <TouchableOpacity
-        style={[styles.backButton, styles.addButton]}
-        onPress={goBack}
-      >
-        <Text style={styles.buttonText}>Atrás</Text>
-      </TouchableOpacity>
+      {currentEquipo && !isAdding && (
+        <ScrollView>
+          <View style={styles.detailsContainer}>
+            {/* Botón de volver */}
+            <TouchableOpacity
+              style={[styles.backButton, styles.addButton]}
+              onPress={goBack}
+            >
+              <Text style={styles.buttonText}>Atrás</Text>
+            </TouchableOpacity>
 
-      <Text style={[styles.title, { fontSize: 28 }]}>Detalles del Planeta</Text>
+            <Text style={[styles.title, { fontSize: 28 }]}>
+              Detalles del Equipo
+            </Text>
 
-      <Image
-        source={{ uri: currentPlanet.image }}
-        style={styles.planetDetailsImage}
-      />
+            <Image
+              source={{ uri: currentEquipo.image }}
+              style={styles.equipoDetailsImage}
+            />
 
-      <Text style={styles.detailText}>
-        <Text style={styles.boldText}>Nombre:</Text> {currentPlanet.name}
-      </Text>
-      <Text style={styles.detailText}>
-        <Text style={styles.boldText}>Descripción:</Text> {currentPlanet.description}
-      </Text>
-      <Text style={styles.detailText}>
-        <Text style={styles.boldText}>Número de lunas:</Text> {currentPlanet.moons}
-      </Text>
-      <Text style={styles.detailText}>
-        <Text style={styles.boldText}>Lunas:</Text> {renderMoons(currentPlanet.moon_names)}
-      </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Nombre:</Text> {currentEquipo.name}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Descripción:</Text>{" "}
+              {currentEquipo.description}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Número de goles:</Text>{" "}
+              {currentEquipo.goals}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.boldText}>Puntos:</Text>{" "}
+              {currentEquipo.points}
+            </Text>
 
-      {/* Botón de editar */}
-      <TouchableOpacity
-        onPress={() => {
-          setForm({
-            name: currentPlanet.name || "",
-            description: currentPlanet.description || "",
-            moons: currentPlanet.moons || 0,
-            moon_names: currentPlanet.moon_names || [],
-            image: currentPlanet.image || "",
-          });
-          setIsAdding(true);
-        }}
-        style={[styles.submitButton, styles.editButton]}
-      >
-        <Text style={styles.buttonText}>Editar</Text>
-      </TouchableOpacity>
+            {/* Botón de editar */}
+            <TouchableOpacity
+              onPress={() => {
+                setForm({
+                  name: currentEquipo.name || "",
+                  description: currentEquipo.description || "",
+                  goals: currentEquipo.goals || 0,
+                  points: currentEquipo.points || 0,
+                  image: currentEquipo.image || "",
+                });
+                setIsAdding(true);
+              }}
+              style={[styles.submitButton, styles.editButton]}
+            >
+              <Text style={styles.buttonText}>Editar</Text>
+            </TouchableOpacity>
 
-      {/* Botón de eliminar */}
-      <TouchableOpacity
-        onPress={() => deletePlanet(currentPlanet.id)}
-        style={[styles.submitButton, styles.deleteButton]}
-      >
-        <Text style={styles.buttonText}>Eliminar</Text>
-      </TouchableOpacity>
-    </View>
-  </ScrollView>
-)}
+            {/* Botón de eliminar */}
+            <TouchableOpacity
+              onPress={() => deleteEquipo(currentEquipo.id)}
+              style={[styles.submitButton, styles.deleteButton]}
+            >
+              <Text style={styles.buttonText}>Eliminar</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
 
-
-
-
-
-      {/* Pantalla para agregar/editar planeta */}
+      {/* Pantalla para agregar/editar equipo */}
       {isAdding && (
-  <ScrollView>
-    <View style={styles.addPlanetContainer}>
-      <TouchableOpacity
-        style={[styles.backButton, styles.addButton]}
-        onPress={goBack}
-      >
-        <Text style={styles.buttonText}>Atrás</Text>
-      </TouchableOpacity>
+        <ScrollView>
+          <View style={styles.addEquipoContainer}>
+            <TouchableOpacity
+              style={[styles.backButton, styles.addButton]}
+              onPress={goBack}
+            >
+              <Text style={styles.buttonText}>Atrás</Text>
+            </TouchableOpacity>
 
-      <Text style={styles.title}>
-        {currentPlanet ? "Editar Planeta" : "Agregar Planeta"}
-      </Text>
+            <Text style={styles.title}>
+              {currentEquipo ? "Editar Equipo" : "Agregar Equipo"}
+            </Text>
 
-      {/* Formulario */}
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Nombre:</Text>
-        <TextInput
-          placeholder="Nombre"
-          value={form.name}
-          onChangeText={(text) => handleFormChange("name", text)}
-          style={styles.input}
-        />
-      </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre"
+              value={form.name}
+              onChangeText={(value) => handleFormChange("name", value)}
+            />
+            <TextInput
+              style={[styles.input, { height: 100 }]}
+              placeholder="Descripción"
+              value={form.description}
+              onChangeText={(value) => handleFormChange("description", value)}
+              multiline={true}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Número de goles"
+              value={form.goals.toString()}
+              onChangeText={(value) =>
+                handleFormChange("goals", parseInt(value) || 0)
+              }
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Número de puntos"
+              value={form.points.toString()}
+              onChangeText={(value) =>
+                handleFormChange("points", parseInt(value) || 0)
+              }
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="URL de la imagen"
+              value={form.image}
+              onChangeText={(value) => handleFormChange("image", value)}
+            />
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Descripción:</Text>
-        <TextInput
-          placeholder="Descripción"
-          value={form.description}
-          onChangeText={(text) => handleFormChange("description", text)}
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Número de lunas:</Text>
-        <TextInput
-          placeholder="Número de lunas"
-          value={form.moons.toString()}
-          onChangeText={(text) => handleFormChange("moons", parseInt(text) || 0)}
-          keyboardType="numeric"
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Lunas (separadas por comas):</Text>
-        <TextInput
-          placeholder="Nombres de las lunas"
-          value={form.moon_names.join(", ")}
-          onChangeText={(text) =>
-            handleFormChange(
-              "moon_names",
-              text.split(",").map((name) => name.trim())
-            )
-          }
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>URL de la imagen:</Text>
-        <TextInput
-          placeholder="URL de la imagen"
-          value={form.image}
-          onChangeText={(text) => handleFormChange("image", text)}
-          style={styles.input}
-        />
-      </View>
-
-      {/* Botones */}
-      <TouchableOpacity onPress={savePlanet} style={styles.submitButton}>
-        <Text style={styles.buttonText}>Guardar Planeta</Text>
-      </TouchableOpacity>
-    </View>
-  </ScrollView>
-)}
+            <TouchableOpacity
+              style={[styles.submitButton, styles.addButton]}
+              onPress={saveEquipo}
+            >
+              <Text style={styles.buttonText}>Guardar</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 // Estilos
 const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
     padding: 20,
@@ -380,11 +350,51 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
+  buttonsRow: {
+    flexDirection: "row",
+    justifyContent:  "flex-end",
+    marginBottom: 10,
+    alignItems: "center",
+    padding: 16,
+  },
+  button: {
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal:5,
+  },
+  androidAddButton: {
+    backgroundColor: "blue",
+    alignSelf: "flex-start", 
+    padding: 10,
+    borderRadius: 5,
+    
+  },
+  iosAddButton: {
+    backgroundColor: "green",
+    alignSelf: "flex-end", 
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 20,
+  },
+  androidAddButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center", 
+  },
+  iosAddButtonText: {
+    color: "black",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center", 
+    alignSelf: "flex-end",
+  },
   listContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 20,
+    
   },
   card: {
     backgroundColor: "#f0f0f0",
@@ -399,43 +409,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     textAlign: "center",
   },
-  androidAddButton: {
-    backgroundColor: "blue",
-    alignSelf: "flex-start", // Alineación a la izquierda
-  },
-  iosAddButton: {
-    backgroundColor: "green",
-    alignSelf: "flex-end", // Alineación a la derecha
-  },
-  androidAddButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  iosAddButtonText: {
-    color: "black",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  planetTitle: {
+  
+
+  equipoTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 5,
   },
-  planetDescription: {
-    fontSize: 14,
-    color: "#555",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  planetImage: {
+  equipoImage: {
     width: 50,
     height: 50,
     marginRight: 10,
     borderRadius: 25,
-  },
-  planetName: {
-    fontSize: 20,
   },
   input: {
     borderWidth: 1,
@@ -444,15 +429,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
-  buttonsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  button: {
-    padding: 10,
-    borderRadius: 5,
-  },
+  
   sortButton: {
     backgroundColor: "green",
   },
@@ -464,6 +441,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     fontWeight: "bold",
+    alignSelf: "flex-start", 
   },
   saveButton: {
     backgroundColor: "green",
@@ -474,7 +452,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   editButton: {
-    backgroundColor: "green", // Un color de fondo para el botón de editar (naranja en este caso)
+    backgroundColor: "green", 
     padding: 15,
     borderRadius: 8,
     marginTop: 20,
@@ -511,21 +489,21 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 15,
   },
-  planetDetailsImage: {
-    width: 200, // Imagen más grande
+  equipoDetailsImage: {
+    width: 200, 
     height: 200,
-    borderRadius: 100, // Redonda
+    borderRadius: 100, 
     marginBottom: 20,
   },
   detailText: {
-    fontSize: 18, // Texto más grande
+    fontSize: 18, 
     marginBottom: 10,
     textAlign: "center",
   },
   boldText: {
-    fontWeight: "bold", // Texto en negrita
+    fontWeight: "bold", 
   },
-  addPlanetContainer: {
+  addEquipoContainer: {
     padding: 20,
     backgroundColor: "#fff",
     borderRadius: 8,
@@ -538,10 +516,10 @@ const styles = StyleSheet.create({
   detailsContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#e2f7fc", // Fondo general de la pantalla
+    backgroundColor: "#e2f7fc", 
   },
   detailCard: {
-    backgroundColor: "#fff", // Fondo blanco para el detalle
+    backgroundColor: "#fff", 
     padding: 20,
     borderRadius: 8,
     marginBottom: 20,
