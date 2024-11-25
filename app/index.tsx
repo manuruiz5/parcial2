@@ -158,7 +158,6 @@ export default function Index() {
                 setIsAdding(true);
               }}
             >
-              
               <Text
                 style={
                   Platform.OS === "android"
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
   },
   buttonsRow: {
     flexDirection: "row",
-    justifyContent:  "flex-end",
+    justifyContent: Platform.OS === "ios" ? "flex-end" : "space-between",
     marginBottom: 10,
     alignItems: "center",
     padding: 16,
@@ -360,7 +359,26 @@ const styles = StyleSheet.create({
   button: {
     padding: 10,
     borderRadius: 5,
-    marginHorizontal:5,
+  },
+  listContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 20,
+    
+  },
+  card: {
+    backgroundColor: "#f0f0f0",
+    padding: 20,
+    borderRadius: 8,
+    width: 250,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    marginBottom: 20,
+    alignItems: "center",
+    textAlign: "center",
   },
   androidAddButton: {
     backgroundColor: "blue",
@@ -389,27 +407,6 @@ const styles = StyleSheet.create({
     textAlign: "center", 
     alignSelf: "flex-end",
   },
-  listContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 20,
-    
-  },
-  card: {
-    backgroundColor: "#f0f0f0",
-    padding: 20,
-    borderRadius: 8,
-    width: 250,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    marginBottom: 20,
-    alignItems: "center",
-    textAlign: "center",
-  },
-  
 
   equipoTitle: {
     fontSize: 18,
